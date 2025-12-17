@@ -1,38 +1,40 @@
-# 🚨 Splunk + Suricata → n8n → Discord
+# 🚨 Splunk → n8n → Discord
 
-## SOC Incident Automation for SSH Brute Force Detection
+## SOC Incident Automation for SSH Brute Force Detection (auth.log)
 
 ---
 
 ## 🔍 Project Overview
 
-This project implements a **Security Operations Center (SOC) automation pipeline** that detects **SSH brute-force attacks** and generates **real-time incident notifications** in a **Discord SOC channel**.
+This project implements a **SOC-style security automation pipeline** that detects **SSH brute-force attacks** using **Linux authentication logs (`auth.log`)** and sends **real-time incident alerts** to a **Discord SOC channel**.
 
-> 🛡️ **Linux / Suricata Logs → Splunk (SIEM) → n8n (SOAR) → Discord (#incident)**
+> 🛡️ **Linux auth.log → Splunk (SIEM) → n8n (SOAR) → Discord (#incident)**
 
-When repeated SSH authentication failures are detected, Splunk triggers an alert, sends structured data to **n8n**, where the event is **classified by severity** and forwarded to Discord as a **formatted incident notification**.
+When repeated SSH login failures are detected, Splunk triggers an alert and sends structured data to **n8n**, where the event is **classified by severity** and forwarded to Discord as a **formatted incident notification**.
 
-This project simulates **real-world SOC alerting and SOAR workflows** used by blue teams.
+This project demonstrates **real-world SOC alerting, triage, and SOAR automation** without using IDS tools like Suricata.
 
 ---
 
 ## 🎯 Objectives
 
-* Detect SSH brute-force attacks
-* Reduce alert noise using aggregation & throttling
+* Detect SSH brute-force attacks from Linux systems
+* Reduce alert noise using aggregation and throttling
 * Automatically classify incidents by severity
-* Deliver clean, real-time SOC alerts
+* Deliver clean, real-time SOC notifications
 * Demonstrate SIEM + SOAR integration
 
 ---
 
 ## 🧩 Key Features
 
-### ✔ SSH Brute Force Detection (Splunk)
+### ✔ SSH Brute Force Detection (auth.log)
 
-* Parses Linux authentication logs
-* Extracts attacker IPs
-* Counts failed login attempts per IP
+* Parses `/var/log/auth.log`
+* Detects repeated `Failed password` events
+* Aggregates attempts per attacker IP
+
+---
 
 ### ✔ Severity-Based Classification (n8n)
 
@@ -42,38 +44,43 @@ This project simulates **real-world SOC alerting and SOAR workflows** used by bl
 | 5–10            | MEDIUM   | Monitor            |
 | > 15            | RISK     | Immediate response |
 
+---
+
 ### ✔ Discord-Based SOC Alerts
 
 * Alerts sent as **Discord embeds**
 * Clear severity indicators (🟢🟠🔴)
 * Clickable Splunk evidence links
+* Prevents alert fatigue
 
-### ✔ SOAR-Ready Architecture
+---
 
-Easily extendable with:
+### ✔ SOAR-Ready Design
+
+The workflow can be extended with:
 
 * IP reputation checks
-* Auto-blocking
-* Ticket creation (TheHive / Jira)
-* Threat intelligence enrichment
+* Auto-blocking via firewall
+* Incident ticket creation
+* Correlation with IDS tools (future)
 
 ---
 
 ## 🧱 Architecture
 
 ```
-[ Linux / Suricata Logs ]
-            ↓
-        [ Splunk ]
-   (SSH Brute Force SPL)
-            ↓
-        [ Webhook ]
-            ↓
-          [ n8n ]
-   (Severity Evaluation)
-            ↓
-        [ Discord ]
-      (#incident channel)
+[ Linux auth.log ]
+        ↓
+     [ Splunk ]
+ (SSH Brute Force SPL)
+        ↓
+     [ Webhook ]
+        ↓
+       [ n8n ]
+ (Severity Evaluation)
+        ↓
+     [ Discord ]
+   (#incident channel)
 ```
 
 ---
@@ -92,14 +99,14 @@ Easily extendable with:
 
 ## ⚙️ Workflow Summary
 
-| Step | Component             | Description                 |
-| ---- | --------------------- | --------------------------- |
-| 1️⃣  | Linux / Suricata Logs | Generate SSH failures       |
-| 2️⃣  | Splunk SPL            | Detect brute-force behavior |
-| 3️⃣  | Splunk Alert          | Triggers webhook            |
-| 4️⃣  | n8n Webhook           | Receives alert payload      |
-| 5️⃣  | n8n Logic             | Classifies severity         |
-| 6️⃣  | Discord Webhook       | Sends incident alert        |
+| Step | Component       | Description                  |
+| ---- | --------------- | ---------------------------- |
+| 1️⃣  | Linux auth.log  | Generates SSH failures       |
+| 2️⃣  | Splunk SPL      | Detects brute-force behavior |
+| 3️⃣  | Splunk Alert    | Triggers webhook             |
+| 4️⃣  | n8n Webhook     | Receives alert payload       |
+| 5️⃣  | n8n Logic       | Classifies severity          |
+| 6️⃣  | Discord Webhook | Sends incident alert         |
 
 ---
 
@@ -118,6 +125,12 @@ earliest=-5m latest=now
 | stats count by src_ip
 | where count >= 5
 ```
+
+**What this does:**
+
+* Extracts attacker IP addresses
+* Counts failed login attempts
+* Flags suspicious behavior
 
 ---
 
@@ -148,7 +161,7 @@ POST http://<n8n-ip>:5678/webhook/ssh
 * **Path:** `/webhook/ssh`
 * **Authentication:** None (internal network)
 
-#### Example Incoming Payload
+#### Example Payload from Splunk
 
 ```json
 {
@@ -165,7 +178,7 @@ POST http://<n8n-ip>:5678/webhook/ssh
 
 ### 🧩 Node 2: Edit Fields (Normalize Data)
 
-| Field       | Value                     |
+| Field       | Expression                |
 | ----------- | ------------------------- |
 | attacker_ip | `{{$json.result.src_ip}}` |
 | attempts    | `{{$json.result.count}}`  |
@@ -195,9 +208,9 @@ if (attempts > 15) {
 return [{
   json: {
     attacker_ip: $json.attacker_ip,
-    attempts: attempts,
-    severity: severity,
-    action: action,
+    attempts,
+    severity,
+    action,
     splunk_link: $json.splunk_link,
     search_name: $json.search_name
   }
@@ -306,34 +319,13 @@ return [{
 
 ---
 
-## 🔐 Security Considerations
-
-* Internal-only webhooks
-* Alert throttling enabled
-* No plaintext secrets
-* Extensible authentication support
-
----
-
-## 🚀 Future Enhancements
-
-* IP reputation enrichment
-* Auto-block attacker IPs
-* Case lifecycle tracking
-* Suricata + SSH correlation
-* SOC dashboards
-* Ticketing integration
-
----
-
 ## 🧠 SOC Skills Demonstrated
 
 * SIEM alert engineering (Splunk)
-* Log analysis & correlation
-* SOAR automation (n8n)
-* Incident triage logic
-* Webhook integrations
-* SOC alert hygiene
+* Linux log analysis (`auth.log`)
+* Brute-force detection logic
+* SOAR automation with n8n
+* Incident severity classification
+* Webhook-based integrations
 
 ---
-

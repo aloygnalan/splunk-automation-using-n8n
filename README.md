@@ -85,15 +85,16 @@ The workflow can be extended with:
 
 ---
 
-## 📸 Example Output (Discord)
+## 📸 Outputs:
 
-🔴 **SSH BRUTE FORCE – HIGH RISK**
+<img width="1486" height="478" alt="2025-12-17_19-27" src="https://github.com/user-attachments/assets/08a95236-1ba4-4fdf-9fb1-2c20bf2b8983" />
 
-* Attacker IP: `192.168.122.1`
-* Attempts: `44`
-* Severity: **RISK**
-* Action: Immediate investigation required
-* Evidence: Clickable Splunk search link
+<img width="1768" height="753" alt="2025-12-17_19-21" src="https://github.com/user-attachments/assets/3b2ca530-d81e-4dcb-8b37-ce7a5bed5a6b" />
+
+<img width="1090" height="869" alt="2025-12-17_19-29" src="https://github.com/user-attachments/assets/80ea307e-e93d-4093-ba10-3cd5b1ffcda9" />
+
+<img width="779" height="774" alt="2025-12-17_21-02" src="https://github.com/user-attachments/assets/5fc2af45-4d6b-4b91-ac39-4a33448d6b88" />
+
 
 ---
 

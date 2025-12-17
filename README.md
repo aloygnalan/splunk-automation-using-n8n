@@ -99,7 +99,7 @@ The workflow can be extended with:
 
 <img width="1090" height="869" alt="2025-12-17_19-29" src="https://github.com/user-attachments/assets/80ea307e-e93d-4093-ba10-3cd5b1ffcda9" />
 
-## Settinngs in Splunk
+## Settinngs in Splunk:
 
 <img width="779" height="774" alt="2025-12-17_21-02" src="https://github.com/user-attachments/assets/5fc2af45-4d6b-4b91-ac39-4a33448d6b88" />
 

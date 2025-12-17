@@ -120,10 +120,12 @@ The workflow can be extended with:
 
 ```spl
 index=* source="/var/log/auth.log" "Failed password"
-earliest=-5m latest=now
-| rex "from (?<src_ip>\d{1,3}(\.\d{1,3}){3})"
-| stats count by src_ip
-| where count >= 5
+| rex "from (?<src_ip>\d{1,3}(?:\.\d{1,3}){3})"
+| stats count AS attempts by src_ip
+| eval severity=case(
+    attempts >= 15, "RISK",
+    attempts >= 5, "MEDIUM"
+)
 ```
 
 **What this does:**
